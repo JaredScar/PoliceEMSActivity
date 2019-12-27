@@ -30,6 +30,12 @@ AddEventHandler('PoliceEMSActivity:GiveWeapons', function()
     GiveWeaponComponentToPed(GetPlayerPed(-1), 487013001, 0x7BC4CDDC)
     SetPedArmour(GetPlayerPed(-1), 100)
 end)
+RegisterNetEvent('PoliceEMSActivity:TakeWeapons')
+AddEventHandler('PoliceEMSActivity:TakeWeapons', function()
+	-- Remove weapons and armor
+	SetPedArmour(GetPlayerPed(-1), 0)
+	RemoveAllPedWeapons(GetPlayerPed(-1), true);
+end)
 RegisterNetEvent("eblips:toggle")
 AddEventHandler("eblips:toggle", function(on)
 	-- toggle blip display --

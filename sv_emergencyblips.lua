@@ -116,6 +116,7 @@ RegisterCommand('duty', function(source, args, rawCommand)
 				'Duration: ' .. minutesActive .. ' minutes',
 					webHook, 16711680)
 			end
+			TriggerClientEvent('PoliceEMSActivity:TakeWeapons', source);
 			timeTracker[source] = nil;
 			sendMsg(source, 'You have toggled your emergency blip ^1OFF')
 			TriggerEvent('eblips:remove', source)
