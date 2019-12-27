@@ -30,6 +30,16 @@ roleList = {
 }
 
 -- CODE --
+Citizen.CreateThread(function()
+	while true do 
+		-- We wait a second and add it to their timeTracker 
+		Wait(1000); -- Wait a second
+		for k, v in pairs(timeTracker) do 
+			timeTracker[k] = timeTracker[k] + 1;
+		end 
+	end 
+end)
+timeTracker = {}
 hasPerms = {}
 permTracker = {}
 activeBlip = {}
@@ -40,10 +50,17 @@ AddEventHandler("playerDropped", function()
 		local tag = activeBlip[source];
 		local webHook = roleList[activeBlip[source]][3];
 		if webHook ~= nil then 
-			sendToDisc('Player ' .. GetPlayerName(source) .. ' is now off duty', 'Player ' .. GetPlayerName(source) .. ' has gone off duty as ' .. tag, '',
+			local time = timeTracker[source];
+			local now = os.time();
+			local startPlusNow = now + time;
+			local minutesActive = os.difftime(now, startPlusNow) / 60;
+			minutesActive = math.floor(math.abs(minutesActive))
+			sendToDisc('Player ' .. GetPlayerName(source) .. ' is now off duty', 'Player ' .. GetPlayerName(source) .. ' has gone off duty as ' .. tag, 
+			'Duration: ' .. minutesActive .. ' minutes',
 				webHook, 16711680)
 		end 
 	end
+	timeTracker[source] = nil;
 	onDuty[source] = nil;
 	permTracker[source] = nil;
 	hasPerms[source] = nil;
@@ -83,15 +100,23 @@ RegisterCommand('duty', function(source, args, rawCommand)
 			TriggerEvent('eblips:add', {name = tag .. GetPlayerName(source), src = source, color = colorr}); 
 			sendMsg(source, 'You have toggled your emergency blip ^2ON ^3and your Blip-Tag is: ' .. tag)
 			onDuty[source] = true;
+			timeTracker[source] = 0;
 			TriggerClientEvent('PoliceEMSActivity:GiveWeapons', source);
 		else 
 			onDuty[source] = nil;
 			local tag = activeBlip[source];
 			local webHook = roleList[activeBlip[source]][3];
 			if webHook ~= nil then
-				sendToDisc('Player ' .. GetPlayerName(source) .. ' is now off duty', 'Player ' .. GetPlayerName(source) .. ' has gone off duty as ' .. tag, '',
+				local time = timeTracker[source];
+				local now = os.time();
+				local startPlusNow = now + time;
+				local minutesActive = os.difftime(now, startPlusNow) / 60;
+				minutesActive = math.floor(math.abs(minutesActive))
+				sendToDisc('Player ' .. GetPlayerName(source) .. ' is now off duty', 'Player ' .. GetPlayerName(source) .. ' has gone off duty as ' .. tag, 
+				'Duration: ' .. minutesActive .. ' minutes',
 					webHook, 16711680)
 			end
+			timeTracker[source] = nil;
 			sendMsg(source, 'You have toggled your emergency blip ^1OFF')
 			TriggerEvent('eblips:remove', source)
 		end
@@ -131,9 +156,14 @@ RegisterCommand('bliptag', function(source, args, rawCommand)
 					local tag = activeBlip[source];
 					local webHook = roleList[activeBlip[source]][3];
 					if onDuty[source] ~= nil then 
+						local time = timeTracker[source];
+						local now = os.time();
+						local startPlusNow = now + time;
+						local minutesActive = os.difftime(now, startPlusNow) / (24 * 60);
 						sendToDisc('Player ' .. GetPlayerName(source) .. ' is now off duty', 'Player ' .. GetPlayerName(source) 
-							.. ' has gone off duty as ' .. tag, '',
+							.. ' has gone off duty as ' .. tag, '**Duration:** ' .. minutesActive,
 							webHook, 16711680)
+						timeTracker[source] = 0;
 					end
 					activeBlip[source] = permTracker[source][sel];
 					sendMsg(source, 'You have set your Blip-Tag to ^1' .. permTracker[source][sel]);
