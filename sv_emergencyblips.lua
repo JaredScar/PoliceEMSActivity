@@ -163,7 +163,7 @@ RegisterCommand('bliptag', function(source, args, rawCommand)
 						local minutesActive = os.difftime(now, startPlusNow) / (60);
 						minutesActive = math.floor(math.abs(minutesActive))
 						sendToDisc('Player ' .. GetPlayerName(source) .. ' is now off duty', 'Player ' .. GetPlayerName(source) 
-							.. ' has gone off duty as ' .. tag, '**Duration:** ' .. minutesActive,
+							.. ' has gone off duty as ' .. tag, 'Duration: ' .. minutesActive,
 							webHook, 16711680)
 						timeTracker[source] = 0;
 					end
