@@ -22,11 +22,11 @@ person = {
 ]]
 -- CONFIG --
 roleList = { 
-	['👮 LSPD | '] = {581881252907319369, 2, nil},
-	['👮 Sheriff | '] = {577622764618383380, 17, nil},
-	['👮 SAHP | '] = {506276895935954944, 3, nil},
-	['👨‍🚒 Fire/EMS | '] = {577635624618819593, 1, nil},
-	['🎖️ NG | '] = {609828128432586752, 5, nil},
+	['👮 LSPD | '] = {"LSPD", 2, nil},
+	['👮 Sheriff | '] = {"Sheriff", 17, nil},
+	['👮 SAHP | '] = {"SAHP", 3, nil},
+	['👨‍🚒 Fire/EMS | '] = {"Fire/EMS", 1, nil},
+	['🎖️ NG | '] = {"NG", 5, nil},
 }
 
 -- CODE --
@@ -193,6 +193,7 @@ RegisterCommand('bliptag', function(source, args, rawCommand)
 	end 
 end)
 
+
 RegisterNetEvent('PoliceEMSActivity:RegisterUser')
 AddEventHandler('PoliceEMSActivity:RegisterUser', function()
 	local src = source
@@ -203,22 +204,20 @@ AddEventHandler('PoliceEMSActivity:RegisterUser', function()
 	end
 	local perms = {}
 	if identifierDiscord then
-		local roleIDs = exports.discord_perms:GetRoles(src)
+		local roleIDs = exports.Badger_Discord_API:GetDiscordRoles(src)
 		if not (roleIDs == false) then
-			for k, v in pairs(roleList) do 
+			for k, v in pairs(roleList) do
 				for j = 1, #roleIDs do
-					if (tostring(v[1]) == tostring(roleIDs[j])) then
-						-- They have a proper role to use it 
+					if exports.Badger_Discord_API:CheckEqual(v[1], roleIDs[j]) then
 						table.insert(perms, k);
 						activeBlip[src] = k;
 						hasPerms[src] = true;
+						print("[PEA] Gave Perms Sucessfully")
 					end
 				end
 			end
-			-- Set up what roles they have access to: 
 			permTracker[src] = perms;
 		else
-			-- They don't have any perms 
 			print("[PoliceEMSActivity] " .. GetPlayerName(src) .. " has not gotten their permissions cause roleIDs == false")
 		end
 	else
@@ -226,6 +225,7 @@ AddEventHandler('PoliceEMSActivity:RegisterUser', function()
 	end
 	permTracker[src] = perms; 
 end)
+
 
 RegisterServerEvent("eblips:add")
 AddEventHandler("eblips:add", function(person)
