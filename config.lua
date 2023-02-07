@@ -4,8 +4,8 @@ Config = {
     EnableInheritances = false,
 
     RoleList = { 
-        [887518674607562803] = {
-            {'👮 Sheriff | ', 17, nil},
+        ["Owner"] = {
+            {'👮 Sheriff | ', 17, 'https://discord.com/api/webhooks/1042272902000676874/tYHDKm68CujIerBsCKJmMXOdt_AsplNvluxulBcjOQdZkkdxdmbd5mbN7ksSdCcnWoQL'},
             {'👮 LSPD | ', 2 , nil},
             {'👮 SAHP | ', 3, nil},
         },

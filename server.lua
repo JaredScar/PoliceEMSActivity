@@ -7,7 +7,6 @@ Citizen.CreateThread(function()
 	--checks to see if players are online on resource start. if so it registers them.
 	if GetNumPlayerIndices() ~= 0 then
 		for _, ID in pairs(GetPlayers()) do
-			print("test")
 			--Register User then wait to avoid rate limiting.
 			RegisterUser(ID)
 		
@@ -143,6 +142,7 @@ RegisterCommand('bliptag', function(source, args, rawCommand)
 				if sel <= #theirBlips then
 					-- Set up their tag
 					local tag = activeBlip[source][1];
+					local newBlip = permTracker[source][sel]
 					local webHook = activeBlip[source][3];
 
 					if onDuty[source] ~= nil then 
@@ -150,14 +150,20 @@ RegisterCommand('bliptag', function(source, args, rawCommand)
 						local now = os.time();
 						local startPlusNow = now + time;
 						local minutesActive = os.difftime(now, startPlusNow) / (60);
+						
 
 						minutesActive = math.floor(math.abs(minutesActive))
 
 						sendToDisc('Player ' .. GetPlayerName(source) .. ' is now off duty', 'Player ' .. GetPlayerName(source) 
-							.. ' has gone off duty as ' .. tag, 'Duration: ' .. minutesActive,
+							.. ' has gone off duty as ' .. tag, 'Duration: ' .. minutesActive .. " minute(s)",
 							webHook, 16711680)
 
 						timeTracker[source] = 0;
+
+						if newBlip[3] ~= nil then
+							sendToDisc('Player ' .. GetPlayerName(source) .. ' is now on duty', 'Player ' .. GetPlayerName(source) .. ' has gone on duty as ' .. newBlip[1], '',
+								webHook, 65280)
+						end
 					end
 
 					activeBlip[source] = permTracker[source][sel];
@@ -165,11 +171,13 @@ RegisterCommand('bliptag', function(source, args, rawCommand)
 					sendMsg(source, 'You have set your Blip-Tag to ^1' .. permTracker[source][sel][1]);
 
 					if onDuty[source] ~= nil then 
-						tag = activeBlip[source][1];
+						tag = newBlip[1];
 						webHook = activeBlip[source][3];
 
-						sendToDisc('Player ' .. GetPlayerName(source) .. ' is now on duty', 'Player ' .. GetPlayerName(source) .. ' has gone on duty as ' .. tag, '',
-							webHook, 65280) 
+						if webHook ~= nil then
+							sendToDisc('Player ' .. GetPlayerName(source) .. ' is now on duty', 'Player ' .. GetPlayerName(source) .. ' has gone on duty as ' .. tag, '',
+								webHook, 65280)
+						end 
 
 						local colorr = activeBlip[source][2]
 
@@ -245,7 +253,7 @@ function RegisterUser(user)
 											hasPerms[src] = true;
 										end
 									end
-									
+
 									print("[PEA] Gave " .. GetPlayerName(src) .. " Perms Sucessfully via Inheritance.")
 								end
 							end
