@@ -16,3 +16,8 @@ server_scripts {
 	"server.lua",
     'EmergencyBlips/sv_emergencyblips.lua',
 }
+
+exports {
+	"IsPlayerOnDuty",
+	"GetPlayerBlipTag",
+}

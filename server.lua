@@ -1,7 +1,21 @@
 -- CONFIG --
 roleList = Config.RoleList;
+inheritances = Config.Inheritances
 
 -- CODE --
+Citizen.CreateThread(function()
+	--checks to see if players are online on resource start. if so it registers them.
+	if GetNumPlayerIndices() ~= 0 then
+		for _, ID in pairs(GetPlayers()) do
+			print("test")
+			--Register User then wait to avoid rate limiting.
+			RegisterUser(ID)
+		
+			Citizen.Wait(500)
+		end
+	end
+end)
+
 Citizen.CreateThread(function()
 	while true do 
 		-- We wait a second and add it to their timeTracker 
@@ -11,12 +25,14 @@ Citizen.CreateThread(function()
 		end 
 	end 
 end)
+
 timeTracker = {}
 hasPerms = {}
 permTracker = {}
 activeBlip = {}
 onDuty = {}
-prefix = '^9[^5Badger-Blips^9] ^3';
+prefix = Config.Prefix;
+
 AddEventHandler("playerDropped", function()
 	if onDuty[source] ~= nil then 
 		local tag = activeBlip[source];
@@ -62,9 +78,9 @@ RegisterCommand('duty', function(source, args, rawCommand)
 	-- The /blip command to toggle on and off the cop blip  
 	if hasPerms[source] ~= nil then 
 		if onDuty[source] == nil then 
-			local colorr = roleList[activeBlip[source]][2];
-			local tag = activeBlip[source];
-			local webHook = roleList[activeBlip[source]][3];
+			local colorr = activeBlip[source][2];
+			local tag = activeBlip[source][1];
+			local webHook = activeBlip[source][3];
 			if webHook ~= nil then
 				sendToDisc('Player ' .. GetPlayerName(source) .. ' is now on duty', 'Player ' .. GetPlayerName(source) .. ' has gone on duty as ' .. tag, '',
 					webHook, 65280)
@@ -77,7 +93,7 @@ RegisterCommand('duty', function(source, args, rawCommand)
 		else 
 			onDuty[source] = nil;
 			local tag = activeBlip[source];
-			local webHook = roleList[activeBlip[source]][3];
+			local webHook = activeBlip[source][3];
 			if webHook ~= nil then
 				local time = timeTracker[source];
 				local now = os.time();
@@ -116,7 +132,7 @@ RegisterCommand('bliptag', function(source, args, rawCommand)
 			sendMsg(source, 'You have access to the following Blip-Tags:');
 			for i = 1, #permTracker[source] do 
 				-- List 
-				TriggerClientEvent('chatMessage', source, '^9[^4' .. i .. '^9] ^0' .. permTracker[source][i]);
+				TriggerClientEvent('chatMessage', source, '^9[^4' .. i .. '^9] ^0' .. permTracker[source][i][1]);
 			end
 		else 
 			-- Choose their bliptag 
@@ -126,27 +142,37 @@ RegisterCommand('bliptag', function(source, args, rawCommand)
 				local theirBlips = permTracker[source];
 				if sel <= #theirBlips then
 					-- Set up their tag
-					local tag = activeBlip[source];
-					local webHook = roleList[activeBlip[source]][3];
+					local tag = activeBlip[source][1];
+					local webHook = activeBlip[source][3];
+
 					if onDuty[source] ~= nil then 
 						local time = timeTracker[source];
 						local now = os.time();
 						local startPlusNow = now + time;
 						local minutesActive = os.difftime(now, startPlusNow) / (60);
+
 						minutesActive = math.floor(math.abs(minutesActive))
+
 						sendToDisc('Player ' .. GetPlayerName(source) .. ' is now off duty', 'Player ' .. GetPlayerName(source) 
 							.. ' has gone off duty as ' .. tag, 'Duration: ' .. minutesActive,
 							webHook, 16711680)
+
 						timeTracker[source] = 0;
 					end
+
 					activeBlip[source] = permTracker[source][sel];
-					sendMsg(source, 'You have set your Blip-Tag to ^1' .. permTracker[source][sel]);
+
+					sendMsg(source, 'You have set your Blip-Tag to ^1' .. permTracker[source][sel][1]);
+
 					if onDuty[source] ~= nil then 
-						tag = activeBlip[source];
-						webHook = roleList[activeBlip[source]][3];
+						tag = activeBlip[source][1];
+						webHook = activeBlip[source][3];
+
 						sendToDisc('Player ' .. GetPlayerName(source) .. ' is now on duty', 'Player ' .. GetPlayerName(source) .. ' has gone on duty as ' .. tag, '',
 							webHook, 65280) 
-						local colorr = roleList[activeBlip[source]][2]
+
+						local colorr = activeBlip[source][2]
+
 						TriggerEvent('eblips:remove', source)
 						TriggerEvent('eblips:add', {name = tag .. GetPlayerName(source), src = source, color = colorr});
 					end
@@ -168,26 +194,66 @@ end)
 
 RegisterNetEvent('PoliceEMSActivity:RegisterUser')
 AddEventHandler('PoliceEMSActivity:RegisterUser', function()
-	local src = source
-	for k, v in ipairs(GetPlayerIdentifiers(src)) do
-			if string.sub(v, 1, string.len("discord:")) == "discord:" then
-				identifierDiscord = v
-			end
+	RegisterUser(source)
+end)
+
+-- EXPORT FUNCTIONS
+function IsPlayerOnDuty(player)
+	if onDuty[player] ~= nil then
+		return true
+	else
+		return false
 	end
+end
+
+function GetPlayerBlipTag(player)
+	return activeBlip[player][1]
+end
+-- END EXPORT FUNCTIONS
+
+function RegisterUser(user)
+	local src = tonumber(user)
+
+	for k, v in ipairs(GetPlayerIdentifiers(src)) do
+		if string.sub(v, 1, string.len("discord:")) == "discord:" then
+			identifierDiscord = v
+		end
+	end
+
 	local perms = {}
+
 	if identifierDiscord then
 		local roleIDs = exports.Badger_Discord_API:GetDiscordRoles(src)
 		if not (roleIDs == false) then
 			for k, v in pairs(roleList) do
 				for j = 1, #roleIDs do
-					if exports.Badger_Discord_API:CheckEqual(v[1], roleIDs[j]) then
-						table.insert(perms, k);
-						activeBlip[src] = k;
-						hasPerms[src] = true;
-						print("[PEA] Gave Perms Sucessfully")
+					if exports.Badger_Discord_API:CheckEqual(k, roleIDs[j]) then
+
+						for _, t in pairs(v) do
+							table.insert(perms, t);
+							activeBlip[src] = t;
+							hasPerms[src] = true;
+							print("[PEA] Gave " .. GetPlayerName(src) .. " Perms Sucessfully")
+						end
+
+						if Config.EnableInheritances then
+							for role, t in pairs(inheritances) do
+								if exports.Badger_Discord_API:CheckEqual(role, roleIDs[j]) then
+									for i = 1, #t do
+										for _, blip in pairs(roleList[t[i]]) do
+											table.insert(perms, blip);
+											hasPerms[src] = true;
+										end
+									end
+									
+									print("[PEA] Gave " .. GetPlayerName(src) .. " Perms Sucessfully via Inheritance.")
+								end
+							end
+						end
 					end
 				end
 			end
+
 			permTracker[src] = perms;
 		else
 			print("[PoliceEMSActivity] " .. GetPlayerName(src) .. " has not gotten their permissions cause roleIDs == false")
@@ -195,5 +261,6 @@ AddEventHandler('PoliceEMSActivity:RegisterUser', function()
 	else
 		print("[PoliceEMSActivity] " .. GetPlayerName(src) .. " has not gotten their permissions cause discord was not detected...")
 	end
+
 	permTracker[src] = perms; 
-end)
+end
