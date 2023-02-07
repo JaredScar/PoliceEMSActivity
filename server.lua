@@ -233,8 +233,9 @@ function RegisterUser(user)
 	if identifierDiscord then
 		local roleIDs = exports.Badger_Discord_API:GetDiscordRoles(src)
 		if not (roleIDs == false) then
-			for k, v in pairs(roleList) do
-				for j = 1, #roleIDs do
+			
+			for j = 1, #roleIDs do
+				for k, v in pairs(roleList) do
 					if exports.Badger_Discord_API:CheckEqual(k, roleIDs[j]) then
 
 						for _, t in pairs(v) do
@@ -243,20 +244,20 @@ function RegisterUser(user)
 							hasPerms[src] = true;
 							print("[PEA] Gave " .. GetPlayerName(src) .. " Perms Sucessfully")
 						end
-
-						if Config.EnableInheritances then
-							for role, t in pairs(inheritances) do
-								if exports.Badger_Discord_API:CheckEqual(role, roleIDs[j]) then
-									for i = 1, #t do
-										for _, blip in pairs(roleList[t[i]]) do
-											table.insert(perms, blip);
-											hasPerms[src] = true;
-										end
-									end
-
-									print("[PEA] Gave " .. GetPlayerName(src) .. " Perms Sucessfully via Inheritance.")
+					end
+				end
+				
+				if Config.EnableInheritances then
+					for role, t in pairs(inheritances) do
+						if exports.Badger_Discord_API:CheckEqual(role, roleIDs[j]) then
+							for i = 1, #t do
+								for _, blip in pairs(roleList[t[i]]) do
+									table.insert(perms, blip);
+									hasPerms[src] = true;
 								end
 							end
+
+							print("[PEA] Gave " .. GetPlayerName(src) .. " Perms Sucessfully via Inheritance.")
 						end
 					end
 				end
