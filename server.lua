@@ -221,6 +221,7 @@ end
 
 function RegisterUser(user)
 	local src = tonumber(user)
+	local identifierDiscord = nil
 
 	for k, v in ipairs(GetPlayerIdentifiers(src)) do
 		if string.sub(v, 1, string.len("discord:")) == "discord:" then
@@ -251,7 +252,16 @@ function RegisterUser(user)
 					for role, t in pairs(inheritances) do
 						if exports.Badger_Discord_API:CheckEqual(role, roleIDs[j]) then
 							for i = 1, #t do
+								if roleList[t[i]] == nil then
+									print("[PEA] Error! Inheritances are not set up correctly for '" .. role .. "'!")
+								end
+
 								for _, blip in pairs(roleList[t[i]]) do
+
+									if activeBlip[src] == nil then
+										activeBlip[src] = blip
+									end
+									
 									table.insert(perms, blip);
 									hasPerms[src] = true;
 								end
