@@ -144,7 +144,7 @@ RegisterCommand('cops', function(source, args, rawCommand)
 		end
 
 		if pmapresent then
-			local freq = exports['pma-voice']:radioChannel(tonumber(id))
+			local freq = Player(tonumber(id)).state['radioChannel']
 
 			if freq == 0 or freq == "0" then
 				freq = "UNK"
