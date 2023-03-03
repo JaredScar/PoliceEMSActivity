@@ -3,7 +3,7 @@ game 'gta5'
 
 author 'JaredScar'
 description 'PoliceEMSActivity'
-version '2.0'
+version '3.0'
 url 'https://github.com/JaredScar/PoliceEMSActivity'
 
 client_scripts {
@@ -17,7 +17,5 @@ server_scripts {
     'EmergencyBlips/sv_emergencyblips.lua',
 }
 
-exports {
-	"IsPlayerOnDuty",
-	"GetPlayerBlipTag",
-}
+server_export "IsPlayerOnDuty"
+server_export "GetPlayerBlipTag"

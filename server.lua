@@ -1,9 +1,14 @@
--- CONFIG --
+-- VARS --
 roleList = Config.RoleList;
 inheritances = Config.Inheritances
+pmapresent = false
 
 -- CODE --
 Citizen.CreateThread(function()
+	print(GetResourceState("pma-voice"))
+	if (GetResourceState("pma-voice") ~= "missing" and GetResourceState("pma-voice") ~= "unknown") then
+		pmapresent = true
+	end
 	--checks to see if players are online on resource start. if so it registers them.
 	if GetNumPlayerIndices() ~= 0 then
 		for _, ID in pairs(GetPlayers()) do
@@ -34,8 +39,8 @@ prefix = Config.Prefix;
 
 AddEventHandler("playerDropped", function()
 	if onDuty[source] ~= nil then 
-		local tag = activeBlip[source];
-		local webHook = roleList[activeBlip[source]][3];
+		local tag = activeBlip[source][1];
+		local webHook = activeBlip[source][3];
 		if webHook ~= nil then 
 			local time = timeTracker[source];
 			local now = os.time();
@@ -91,7 +96,7 @@ RegisterCommand('duty', function(source, args, rawCommand)
 			TriggerClientEvent('PoliceEMSActivity:GiveWeapons', source);
 		else 
 			onDuty[source] = nil;
-			local tag = activeBlip[source];
+			local tag = activeBlip[source][1];
 			local webHook = activeBlip[source][3];
 			if webHook ~= nil then
 				local time = timeTracker[source];
@@ -101,7 +106,7 @@ RegisterCommand('duty', function(source, args, rawCommand)
 				minutesActive = math.floor(math.abs(minutesActive))
 				sendToDisc('Player ' .. GetPlayerName(source) .. ' is now off duty', 'Player ' .. GetPlayerName(source) .. ' has gone off duty as ' .. tag, 
 				'Duration: ' .. minutesActive .. ' minutes',
-					webHook, 16711680)
+				webHook, 16711680)
 			end
 			TriggerClientEvent('PoliceEMSActivity:TakeWeapons', source);
 			timeTracker[source] = nil;
@@ -115,9 +120,42 @@ RegisterCommand('duty', function(source, args, rawCommand)
 end)
 RegisterCommand('cops', function(source, args, rawCommand) 
 	-- Prints the active cops online with a /blip that is on 
-	sendMsg(source, 'The active cops on are:')
-	for id, _ in pairs(onDuty) do 
-		TriggerClientEvent('chatMessage', source, '^9[^4' .. id .. '^9] ^0' .. GetPlayerName(id));
+
+	sendMsg(source, Config.CopsCommandMessage)
+
+	for id, _ in pairs(onDuty) do
+		local message = Config.CopsCommandPlayerMessage
+		message = message:gsub('{PLAYER_NAME}', GetPlayerName(tonumber(id)))
+		message = message:gsub('{PLAYER_ID}', tonumber(id))
+		local tag = activeBlip[tonumber(id)][1]
+		if ColorTable[activeBlip[tonumber(id)][2]] ~= nil then
+			tag = ColorTable[activeBlip[tonumber(id)][2]] .. tag .. "^0"
+		end
+		message = message:gsub('{ACTIVE_TAG}', tag)
+
+		if message:find("{TIME_ONDUTY}") then
+			local time = timeTracker[tonumber(id)];
+			local now = os.time();
+			local startPlusNow = now + time;
+			local minutesActive = os.difftime(now, startPlusNow) / 60;
+			minutesActive = math.floor(math.abs(minutesActive))
+
+			message = message:gsub("{TIME_ONDUTY}", minutesActive .. " minute(s)")
+		end
+
+		if pmapresent then
+			local freq = exports['pma-voice']:radioChannel(tonumber(id))
+
+			if freq == 0 or freq == "0" then
+				freq = "UNK"
+			else
+				freq = freq .. " MHZ"
+			end
+
+			message = message:gsub('{RADIO_FREQ}', freq)
+		end
+
+		TriggerClientEvent('chatMessage', source, message);
 	end
 end)
 function sendMsg(src, msg) 
@@ -207,7 +245,7 @@ end)
 
 -- EXPORT FUNCTIONS
 function IsPlayerOnDuty(player)
-	if onDuty[player] ~= nil then
+	if onDuty[tonumber(player)] ~= nil then
 		return true
 	else
 		return false
@@ -283,3 +321,49 @@ function RegisterUser(user)
 
 	permTracker[src] = perms; 
 end
+
+--A table of chat colors for the blip colors.
+ColorTable = {
+	[1] = '^1',
+	[49] = '^1',
+	[59] = '^1',
+	[75] = '^1',
+	[2] = '^2',
+	[11] = '^2',
+	[24] = '^2',
+	[25] = '^2',
+	[43] = '^2',
+	[69] = '^2',
+	[82] = '^2',
+	[5] = '^3',
+	[28] = '^3',
+	[36] = '^3',
+	[46] = '^3',
+	[60] = '^3',
+	[66] = '^3',
+	[70] = '^3',
+	[71] = '^3',
+	[73] = '^3',
+	[3] = '^5',
+	[12] = '^5',
+	[18] = '^5',
+	[26] = '^5',
+	[32] = '^5',
+	[42] = '^5',
+	[53] = '^5',
+	[57] = '^5',
+	[67] = '^5',
+	[68] = '^5',
+	[74] = '^5',
+	[77] = '^5',
+	[80] = '^5',
+	[84] = '^5',
+	[7] = '^6',
+	[29] = '^4',
+	[38] = '^4',
+	[78] = '^4',
+	[63] = '^4',
+	[6] = '^8',
+	[76] = '^8',
+	[61] = '^9',
+}
