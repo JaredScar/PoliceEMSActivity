@@ -2,9 +2,11 @@ AddEventHandler('playerSpawned', function()
 	-- The player has spawned, we gotta set their perms up
 	TriggerServerEvent('PoliceEMSActivity:RegisterUser'); 
 end)
+
 function giveWeapon(hash)
     GiveWeaponToPed(GetPlayerPed(-1), GetHashKey(hash), 999, false, false)
 end
+
 RegisterNetEvent('PoliceEMSActivity:GiveWeapons')
 AddEventHandler('PoliceEMSActivity:GiveWeapons', function()
 	giveWeapon("weapon_nightstick")
@@ -20,6 +22,7 @@ AddEventHandler('PoliceEMSActivity:GiveWeapons', function()
     GiveWeaponComponentToPed(GetPlayerPed(-1), 487013001, 0x7BC4CDDC)
     SetPedArmour(GetPlayerPed(-1), 100)
 end)
+
 RegisterNetEvent('PoliceEMSActivity:TakeWeapons')
 AddEventHandler('PoliceEMSActivity:TakeWeapons', function()
 	-- Remove weapons and armor
